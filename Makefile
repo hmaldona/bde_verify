@@ -6,11 +6,15 @@ LLVMDIR    ?= $(PREFIX)
 SYSTEM     := $(shell uname -s)
 DESTDIR    ?= $(PREFIX)
 
-ifeq ($(notdir $(CXX)),g++)
-GCCDIR     ?= $(patsubst %/bin/g++,%,$(shell which $(CXX)))
-else
-GCCDIR     ?= $(patsubst %/bin/g++,%,$(shell which g++))
-endif
+GCCVERSION  = 4.9.2
+GCCDIR      = /opt/swt/install/gcc-$(GCCVERSION)
+CXX         = $(GCCDIR)/bin/g++
+
+# ifeq ($(notdir $(CXX)),g++)
+# GCCDIR     ?= $(patsubst %/bin/g++,%,$(shell which $(CXX)))
+# else
+# GCCDIR     ?= $(patsubst %/bin/g++,%,$(shell which g++))
+# endif
 
 TARGET      = bde_verify_bin
 CSABASE     = csabase
@@ -151,7 +155,7 @@ UNUSED =                                                                      \
 
 DEFFLAGS += -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS
 INCFLAGS += -I. -I$(CSABASEDIR) -Igroups/csa/csadep
-CXXFLAGS += -fno-common -fno-strict-aliasing -fno-exceptions -fno-rtti
+CXXFLAGS += -g -fno-common -fno-strict-aliasing -fno-exceptions -fno-rtti
 
 OFILES = $(CXXFILES:%.cpp=$(OBJ)/%.o)
 
@@ -234,7 +238,7 @@ $(OBJ)/$(TARGET): $(CSABASEDIR)/$(OBJ)/$(LIBCSABASE) $(OFILES)
 $(OBJ)/%.o: %.cpp
 	@if [ ! -d $(@D) ]; then mkdir -p $(@D); fi
 	@echo compiling $(@:$(OBJ)/%.o=%.cpp)
-	$(VERBOSE) $(CXX) $(INCFLAGS) $(DEFFLAGS) $(CXXFLAGS) \
+	$(VERBOSE) $(CXX) $(INCFLAGS) $(DEFFLAGS) $(CXXFLAGS) $(WARNFLAGS) \
                           -o $@ -c $(@:$(OBJ)/%.o=%.cpp)
 
 .PHONY: install install-bin install-dev
@@ -314,12 +318,12 @@ $(RNAMES):
 depend $(OBJ)/make.depend:
 	@if [ ! -d $(OBJ) ]; then mkdir $(OBJ); fi
 	@echo analysing dependencies
-	$(VERBOSE) $(CXX) $(INCFLAGS) $(DEFFLAGS) -M $(CXXFILES)                  \
+	$(VERBOSE) $(CXX) $(INCFLAGS) $(DEFFLAGS) -M $(CXXFILES)              \
             $(filter-out -Wno-unused-local-typedefs, $(CXXFLAGS))             \
         | perl -pe 's[^(?! )][$(OBJ)/]' > $(OBJ)/make.depend
 
 ifneq "$(MAKECMDGOALS)" "clean"
-    include $(OBJ)/make.depend
+    -include $(OBJ)/make.depend
 endif
 
 ## ----------------------------------------------------------------------------
