@@ -193,6 +193,7 @@ add_executable(bde_verify_bin
     ${G}/csamisc/csamisc_thrownonstdexception.cpp
     ${G}/csamisc/csamisc_unnamed_temporary.cpp
     ${G}/csamisc/csamisc_verifysameargumentnames.cpp
+	${G}/csamisc/csamisc_emptystringinitialization.cpp
     ${G}/csastil/csastil_externalguards.cpp
     ${G}/csastil/csastil_implicitctor.cpp
     ${G}/csastil/csastil_includeorder.cpp
