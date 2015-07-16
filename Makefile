@@ -88,7 +88,7 @@ CXXFILES =                                                                    \
         groups/csa/csabbg/csabbg_functioncontract.cpp                         \
         groups/csa/csabbg/csabbg_midreturn.cpp                                \
         groups/csa/csabbg/csabbg_testdriver.cpp                               \
-        groups/csa/csafmt/csafmt_banner.cpp                                   \
+	    groups/csa/csafmt/csafmt_banner.cpp                                   \
         groups/csa/csafmt/csafmt_comments.cpp                                 \
         groups/csa/csafmt/csafmt_headline.cpp                                 \
         groups/csa/csafmt/csafmt_indent.cpp                                   \
@@ -121,6 +121,7 @@ CXXFILES =                                                                    \
         groups/csa/csamisc/csamisc_thrownonstdexception.cpp                   \
         groups/csa/csamisc/csamisc_unnamed_temporary.cpp                      \
         groups/csa/csamisc/csamisc_verifysameargumentnames.cpp                \
+		groups/csa/csamisc/csamisc_emptystringinitialisation.cpp              \
         groups/csa/csastil/csastil_externalguards.cpp                         \
         groups/csa/csastil/csastil_implicitctor.cpp                           \
         groups/csa/csastil/csastil_includeorder.cpp                           \
