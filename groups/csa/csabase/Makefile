@@ -4,11 +4,18 @@ PREFIX     ?= $(firstword $(wildcard /opt/bb /usr))
 LLVMDIR    ?= $(PREFIX)
 
 SYSTEM     := $(shell uname -s)
-ifeq ($(notdir $(CXX)),g++)
-GCCDIR     ?= $(patsubst %/bin/g++,%,$(shell which $(CXX)))
-else
-GCCDIR     ?= $(patsubst %/bin/g++,%,$(shell which g++))
-endif
+
+GCCVERSION  = 4.9.2
+GCCDIR      = /opt/swt/install/gcc-$(GCCVERSION)
+CXX         = $(GCCDIR)/bin/g++
+
+
+
+#ifeq ($(notdir $(CXX)),g++)
+#GCCDIR     ?= $(patsubst %/bin/g++,%,$(shell which $(CXX)))
+#else
+#GCCDIR     ?= $(patsubst %/bin/g++,%,$(shell which g++))
+#endif
 
 CSABASE     = csabase
 LCB         = bde-verify
@@ -59,6 +66,7 @@ CXXFILES =                                                 \
         csabase_tool.cpp                                   \
         csabase_util.cpp                                   \
         csabase_visitor.cpp                                \
+		csabde_tool.cpp									   \
 
 # -----------------------------------------------------------------------------
 
