@@ -19,8 +19,11 @@
 #include <sstream>
 #include <map>
 
+#include <csautil_bregistry.h>
+
 
 using namespace csabase;
+using namespace csautil;
 using namespace clang;
 using namespace clang::ast_matchers;
 using namespace clang::tooling;
@@ -67,9 +70,10 @@ namespace {
     //matches string initialization as a variable or in an initialization list
     static const internal::DynTypedMatcher& dyn_matchBreg()
     {
-        static const internal::DynTypedMatcher& matcher = findAll( functionDecl( hasDescendant( 
+        static const internal::DynTypedMatcher matcher = findAll( functionDecl( hasDescendant( 
                                                              stmt( findAll( stmt(
-                                                                 eachOf(                                                                                                                                                               ifStmt( hasCondition( expr( findAll( 
+                                                                 eachOf(
+                                                                     ifStmt( hasCondition( expr( findAll( 
                                                                          callExpr().bind("call"))))).bind("ifstmt"),
                                                                      ifStmt( hasCondition( expr( findAll( 
                                                                          declRefExpr().bind("var"))))).bind("ifstmt"),
@@ -102,6 +106,13 @@ namespace {
     {
         if (pair.second == defaultValue) {
             //hook database code in here
+            
+            //BREGEntryInfo bregInfo;
+            
+            //BRegistry::getEntryInformation( bregInfo, "bbit_enable_create_allocation_per_route" );
+           
+            //std::cout << bregInfo.d_prodValue << std::endl;
+
             return false;
         }
         
@@ -135,7 +146,6 @@ namespace {
 
     void report::matchBreg(BoundNodes const & nodes)
     {
-        FunctionDecl const * func = nodes.getNodeAs<FunctionDecl>("func");
         DeclRefExpr const * var = nodes.getNodeAs<DeclRefExpr>("var");
         CallExpr const * call = nodes.getNodeAs<CallExpr>("call");
         IfStmt const * ifStmt = nodes.getNodeAs<IfStmt>("ifstmt");
@@ -195,20 +205,6 @@ namespace {
                         std::string replacement = getBregValue(e) ? "true" : "false";
 
                         if ( var != nullptr ) {
-
-                            //remove var assign
-                            auto foundVarDecl = std::find(varDeclsRemoved.begin(), varDeclsRemoved.end(), varDecl);
-    
-                            if ( foundVarDecl == varDeclsRemoved.end() ) {
-                                SourceLocation end = m.getFileLoc(Lexer::getLocForEndOfToken( varDecl->getLocEnd(), 0, m, a.context()->getLangOpts()));
-                                auto varDeclRange = SourceRange(varDecl->getLocStart(), end.getLocWithOffset(1));
-                                //a.ReplaceText(varDeclRange, "");
-
-                                //offset += ( varDeclRange.getEnd().getRawEncoding() - varDeclRange.getBegin().getRawEncoding() );
-
-                                varDeclsRemoved.push_back(varDecl);
-                            }
-                            
                             replaceExpr(var, var->getLocStart(), replacement, ifStmt);
                         }
                         else {

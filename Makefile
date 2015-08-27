@@ -4,19 +4,30 @@ PREFIX     ?= $(firstword $(wildcard /opt/bb /usr))
 LLVMDIR    ?= $(PREFIX)
 
 SYSTEM     := $(shell uname -s)
+PROCESSOR   = $(shell uname -p)
 DESTDIR    ?= $(PREFIX)
 
-ifeq ($(notdir $(CXX)),g++)
-GCCDIR     ?= $(patsubst %/bin/g++,%,$(shell which $(CXX)))
-else
-GCCDIR     ?= $(patsubst %/bin/g++,%,$(shell which g++))
-endif
+GCCVERSION  = 4.9.2
+GCCDIR      = /opt/swt/install/gcc-$(GCCVERSION)
+CXX         = $(GCCDIR)/bin/g++
+
 
 TARGET      = bde_verify_bin
+
 CSABASE     = csabase
 LCB         = bde-verify
 LIBCSABASE  = lib$(LCB).a
 CSABASEDIR  = groups/csa/csabase
+
+CSAUTIL     = csautil
+LCU         = bde-verify-util
+LIBCSAUTIL  = lib$(LCU).a
+CSAUTILDIR  = groups/csa/csautil
+
+AET         = aet
+LAET        = aet
+LIBAET      = lib$(LAET).a
+AETDIR      = /bb/mbig/mbig3170/ts/et/git/aimet/aet/aetutils
 
 CXXFLAGS   += -m64 -std=c++11
 CXXFLAGS   += -Wall -Wno-unused-local-typedefs
@@ -31,6 +42,7 @@ endif
 
 ifeq ($(SYSTEM),Linux)
     AR          = /usr/bin/ar
+	ARCHCODE    = linux
     LIBDIRS     = $(GCCDIR)/lib64                                             \
                   $(PREFIX)/lib64                                             \
                   /opt/swt/lib64                                              \
@@ -58,7 +70,13 @@ OBJ        := $(SYSTEM)-$(notdir $(CXX))
 
 # Set up location of clang headers and libraries needed by bde_verify.
 INCFLAGS   += -I$(LLVMDIR)/include
-LDFLAGS    += -L$(LLVMDIR)/lib -L$(CSABASEDIR)/$(OBJ)
+INCFLAGS   += -I/bb/build/$(SYSTEM)-$(PROCESSOR)-64/release/robolibs/trunk/lib/dpkgroot/opt/bb/include/  
+LDFLAGS    += -L$(LLVMDIR)/lib -L$(CSABASEDIR)/$(OBJ) -L$(CSAUTILDIR)/$(OBJ)
+LDFLAGS    += -L$(AETDIR)/$(OBJ) -L./breguisvcmsg 
+LDFLAGS    += -L/bb/build/$(SYSTEM)-$(PROCESSOR)-64/release/robolibs/trunk/lib/
+LDFLAGS    += -L/bb/build/$(SYSTEM)-$(PROCESSOR)-64/release/robolibs/trunk/lib/dpkgroot/opt/bb/lib64/robo/
+LDFLAGS    += -L/bb/build/$(SYSTEM)-$(PROCESSOR)-64/release/robolibs/trunk/lib/dpkgroot/opt/bb/lib64/
+
 
 VERBOSE ?= @
 
@@ -67,16 +85,53 @@ VERBOSE ?= @
 CXXFILES =                                                                    \
 		groups/csa/breg_remover.cpp										      \
 		groups/csa/breg_replacer.cpp                                          \
+		groups/csa/expr_tree.cpp                                               \
 
 # -----------------------------------------------------------------------------
 
 DEFFLAGS += -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS
-INCFLAGS += -I. -I$(CSABASEDIR) -Igroups/csa/csadep
-CXXFLAGS += -fno-common -fno-strict-aliasing -fno-exceptions -fno-rtti
+INCFLAGS += -I. -I$(CSABASEDIR) -I$(CSAUTILDIR) -Igroups/csa/csadep
+ 
+
+CXXFLAGS += -g -fno-common -fno-strict-aliasing -fno-exceptions -fno-rtti
 
 OFILES = $(CXXFILES:%.cpp=$(OBJ)/%.o)
 
+EXTRALIBS +=  -lbte              											  \
+			  -lbce              											  \
+			  -lbae              											  \
+			  -lbas  														  \
+			  -lbde  														  \
+			  -lbsc  														  \
+			  -lbsl  													 	  \
+			  -lbae.opt_exc_mt_64  										  	  \
+			  -lbte.opt_exc_mt_64  										  	  \
+			  -lbce.opt_exc_mt_64  										  	  \
+			  -lbde.opt_exc_mt_64  										  	  \
+			  -lbdl.opt_exc_mt_64  										  	  \
+			  -lpthread  													  \
+			  -la_baslt  													  \
+			  -lparmsbase  												  	  \
+			  -lbsc  														  \
+			  -lbsi  														  \
+			  -le_ipc  												      	  \
+			  -lbbmsgbufs  												  	  \
+			  -lbbipc  													   	  \
+			  -lsysutil  													  \
+			  -lbae.opt_exc_mt_64  										  	  \
+			  -lbte.opt_exc_mt_64  										  	  \
+			  -lbce.opt_exc_mt_64  										  	  \
+			  -lbde.opt_exc_mt_64  										  	  \
+			  -lbdl.opt_exc_mt_64  										  	  \
+			  -lbsl.opt_exc_mt_64  										  	  \
+			  -lm  														  	  \
+			  -lopenbsd-compat  											  \
+			  -lrt  														  \
+
 LIBS     =    -l$(LCB)                                                        \
+			  -l$(LCU)                                                        \
+			  -l$(LAET)                                                       \
+			  -lbreguisvcmsg.$(ARCHCODE)                                      \
               -lLLVMX86Info                                                   \
               -lLLVMSparcInfo                                                 \
               -lclangFrontendTool                                             \
@@ -143,11 +198,16 @@ LIBS     =    -l$(LCB)                                                        \
 default: $(OBJ)/$(TARGET)
 
 .PHONY: csabase
+.PHONY: csautil
 
 $(CSABASEDIR)/$(OBJ)/$(LIBCSABASE): csabase
 	$(VERBOSE) $(MAKE) -C $(CSABASEDIR)
 
-$(OBJ)/$(TARGET): $(CSABASEDIR)/$(OBJ)/$(LIBCSABASE) $(OFILES)
+$(CSAUTILDIR)/$(OBJ)/$(LIBCSAUTIL): csautil
+	$(VERBOSE) $(MAKE) -C $(CSAUTILDIR)
+
+
+$(OBJ)/$(TARGET): $(CSABASEDIR)/$(OBJ)/$(LIBCSABASE) $(CSAUTILDIR)/$(OBJ)/$(LIBCSAUTIL) $(OFILES)
 	@echo linking executable
 	$(VERBOSE) $(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@.$$ $(OFILES) $(LIBS)
 	mv $@.$$ $@
@@ -155,26 +215,8 @@ $(OBJ)/$(TARGET): $(CSABASEDIR)/$(OBJ)/$(LIBCSABASE) $(OFILES)
 $(OBJ)/%.o: %.cpp
 	@if [ ! -d $(@D) ]; then mkdir -p $(@D); fi
 	@echo compiling $(@:$(OBJ)/%.o=%.cpp)
-	$(VERBOSE) $(CXX) $(INCFLAGS) $(DEFFLAGS) $(CXXFLAGS) \
+	$(VERBOSE) $(CXX) $(INCFLAGS) $(DEFFLAGS) $(CXXFLAGS) $(WARNFLAGS) \
                           -o $@ -c $(@:$(OBJ)/%.o=%.cpp)
-
-.PHONY: install install-bin install-dev
-
-install: install-bin install-dev
-
-install-bin: $(OBJ)/$(TARGET)
-	$(VERBOSE) $(MAKE) -C $(CSABASEDIR) install-bin
-	mkdir -p $(DESTDIR)/libexec/bde-verify
-	cp $(OBJ)/$(TARGET) $(DESTDIR)/libexec/bde-verify
-	mkdir -p $(DESTDIR)/bin
-	cp scripts/bde_verify scripts/bb_cppverify scripts/check_bos $(DESTDIR)/bin
-	mkdir -p $(DESTDIR)/etc/bde-verify
-	cp bde_verify.cfg bb_cppverify.cfg $(DESTDIR)/etc/bde-verify
-
-install-dev:
-	$(VERBOSE) $(MAKE) -C $(CSABASEDIR) install-dev
-	# cp groups/csa/csadep/csadep_*.h $(DESTDIR)/include/bde-verify
-
 .PHONY: clean
 
 clean:
@@ -235,12 +277,12 @@ $(RNAMES):
 depend $(OBJ)/make.depend:
 	@if [ ! -d $(OBJ) ]; then mkdir $(OBJ); fi
 	@echo analysing dependencies
-	$(VERBOSE) $(CXX) $(INCFLAGS) $(DEFFLAGS) -M $(CXXFILES)                  \
+	$(VERBOSE) $(CXX) $(INCFLAGS) $(DEFFLAGS) -M $(CXXFILES)              \
             $(filter-out -Wno-unused-local-typedefs, $(CXXFLAGS))             \
         | perl -pe 's[^(?! )][$(OBJ)/]' > $(OBJ)/make.depend
 
 ifneq "$(MAKECMDGOALS)" "clean"
-    include $(OBJ)/make.depend
+    -include $(OBJ)/make.depend
 endif
 
 ## ----------------------------------------------------------------------------
