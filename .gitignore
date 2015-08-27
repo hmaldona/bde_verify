@@ -7,3 +7,8 @@ SunOS-g++
 bb_cppverify_build
 bde_verify_build
 index.html
+test.*
+breg.cpp*
+*.swp
+.bregLocs
+
