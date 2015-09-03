@@ -31,12 +31,22 @@ char const * LOG_CATEGORY = "CSAUTIL.BREGISTRY";
 
 // class data members
 
-unsigned int BRegistry::s_uuid = 2557576;
+BRegistry::BRegistry()
+{
+}
 
-unsigned int BRegistry::s_daysSinceExpiry = 60;
 
-std::map<std::string, BREGEntryInfo> BRegistry::s_entries;
+BRegistry::BRegistry(unsigned int s_uuid, unsigned int s_daysSinceExpiry)
+{
+    s_uuid = s_uuid;
+    s_daysSinceExpiry = s_daysSinceExpiry;
+}
 
+
+//unsigned int BRegistry::s_uuid = 7034648;
+//
+//unsigned int BRegistry::s_daysSinceExpiry = 60;
+//std::map<std::string, BREGEntryInfo> BRegistry::s_entries;
 
 // class members
 
@@ -73,13 +83,77 @@ bool BRegistry::getEntryInformation(BREGEntryInfo & entryInfo,
 }
 
 
-bool BRegistry::getEntryInformation(BREGEntryInfo     & entryInfo,
-                                    std::string const & entryAccessor)
+bool BRegistry::getEntryByValue(BREGEntryInfo & entryInfo, 
+                                std::string const & entryAccessor, 
+                                int version) 
 {
     BAEL_LOG_SET_CATEGORY(LOG_CATEGORY);
 
     std::map<std::string, BREGEntryInfo>::iterator iterFind =
         s_entries.find(entryAccessor);
+
+    if (iterFind == s_entries.end()) {
+        BAEL_LOG_ERROR << "Trying to retrieve value for unknown BREG entry: "
+            << entryAccessor
+            << BAEL_LOG_END;
+
+        return false;                                                 // RETURN
+    }
+
+    BREGEntryInfo & entry = iterFind->second;
+
+    //if (entry.d_isCached) {
+    //    entryInfo = entry;
+//
+//        return true;                                                  // RETURN
+//    }
+
+    s_breguisvc::Request request;
+
+    s_breguisvc::ValueRequest value;
+    value.entryId() = entryInfo.d_id;
+    value.version() = version;
+
+    request.makeGetEntryValue(value);
+
+    s_breguisvc::Response response;
+
+    int rcode = BregSvcClient::instance().executeRequest(response,
+                                                         request,
+                                                         s_uuid,
+                                                         s_breguisvc::Response::SELECTION_ID_ENTRY_VALUE);
+    
+
+    if (!rcode) {
+        if (response.entryValue().entryId() == entryInfo.d_id) {
+            
+            entryInfo.d_prodValue = response.entryValue().entryData().value().boolValue();
+            std::cout << "file: " << entryInfo.d_prodValue << std::endl;
+
+            return true;                                          // RETURN
+        }
+        else {
+            BAEL_LOG_ERROR << "Failed to find BREG entry for '" << entryAccessor 
+                           << "': Found more than one entry"
+                           << BAEL_LOG_END;
+
+            return false;                                             // RETURN
+        }
+    }
+
+    return false;
+
+
+}
+
+
+
+bool BRegistry::getEntryInformation(BREGEntryInfo     & entryInfo,
+                                    std::string const & entryAccessor)
+{
+    BAEL_LOG_SET_CATEGORY(LOG_CATEGORY);
+
+    std::map<std::string, BREGEntryInfo>::iterator iterFind = s_entries.find(entryAccessor);
 
     if (iterFind != s_entries.end()) {
         entryInfo = iterFind->second;
@@ -97,15 +171,16 @@ bool BRegistry::getEntryInformation(BREGEntryInfo     & entryInfo,
                                                          request,
                                                          s_uuid,
                                                          s_breguisvc::Response::SELECTION_ID_NODE_TREE);
+
     if (!rcode) {
         if (response.nodeTree().size() == 1) {
             s_breguisvc::Node const & node = response.nodeTree()[0];
-
+            
             entryInfo.d_id = node.id();
             entryInfo.d_accessor = entryAccessor;
             entryInfo.d_hasExpired = node.hasExpired();
             entryInfo.d_isObsolete =  node.obsoleteTraceEnabled();
-
+            
             request.makeGetRegistry(entryInfo.d_id);
             response.reset();
 
@@ -113,10 +188,10 @@ bool BRegistry::getEntryInformation(BREGEntryInfo     & entryInfo,
                                                              request,
                                                              s_uuid,
                                                              s_breguisvc::Response::SELECTION_ID_REGISTRY_INFO);
-
+            
+            
             if (!rcode) {
-                s_breguisvc::NodeInfo const & nodeInfo =
-                    response.registryInfo().node();
+                s_breguisvc::NodeInfo const & nodeInfo = response.registryInfo().node();
 
                 entryInfo.d_drqsGroup = nodeInfo.contacts().drqsGroup();
 
@@ -170,10 +245,14 @@ bool BRegistry::getEntryValueInformation(BREGEntryInfo     & entryInfo,
 
     s_breguisvc::Response response;
 
+
     int rcode = BregSvcClient::instance().executeRequest(response,
                                                          request,
                                                          s_uuid,
                                                          s_breguisvc::Response::SELECTION_ID_NODE_DETAILS);
+    
+    
+
     if (!rcode) {
         s_breguisvc::NodeDetails const & nodeDetails = response.nodeDetails();
 

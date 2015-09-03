@@ -1,0 +1,36 @@
+# Generated on nytsdev2 at Mon May 18 07:50:25 2015 by hmaldona using:
+# /bbsrc/bin/prod/bin/bde_metamkmk.pl '--type' 'other' '--library' 'breguisvc' '--makefile' 'breguisvc.mk'
+
+#SRCS=list of source file<.c .cpp .f .gob>
+#source files under current dir will be used
+#if SRCS is not presented
+
+#SRCDIRS=list of subdirectories
+#source files under current dir and the
+#specified sub directories will be used
+#if SRCS is not presented
+
+ANAME=libbreguisvc.a
+USER_CFLAGS   += -I.
+USER_CPPFLAGS += -I.
+USER_FFLAGS   += -I.
+
+
+# remove this to disable checking for gcc warnings
+IS_GCC_WARNINGS_CLEAN=yes
+
+#--- do not modify below ---
+
+IS_BDE=yes
+IS_PTHREAD=yes
+IS_EXCEPTION=yes
+IS_DEPENDS_NATIVE=1
+
+MKINCL?=/bbsrc/mkincludes/
+include $(MKINCL)sourcelist.mk
+AOBJS?=$(OBJS_AR)
+include $(MKINCL)machdep.newlink
+
+-include local.mk
+
+include $(MKINCL)linklib.newlink

@@ -1,0 +1,54 @@
+2-stage process
+	Replace breg calls with a boolean literal 
+	Remove breg header files and remove or simplify if-stmts that contained breg calls 
+
+
+Replacer 
+	Matches if-stmts with function calls in the condition 
+	Matches if-stmts with variables in the condition 
+	Matches assignment statements
+	Matches variable declaration statements 
+	
+	Variable values are added to a map to track values 
+
+	Breg calls are recognised by the function 'bregdb_eval_bbitcxt_bool_rv' 
+	
+	BREG_ON and BREG_OFF are supported by doing the macro expansion manually
+	Once a breg has been found it's value is retrieved and is used in the replacement 
+	The position of the bregs removed is recorded in a file with an offset 
+	The offset is the difference between the old stmt and the new statement
+	It's necessary to ensure the remover knows which if-stmts had breg calls
+
+Remover 
+	Removes header files 
+	Matches every if-stmt
+	Checks if the if-stmt contained a breg
+	Checks if the if-stmt has been removed already as an else-if
+	Checks if the if-stmt has been removed already as a nested if-stmt
+	Either rebuilds the condition or rebuilds the if-stmt
+	Pruning and rebuilding the condition is managed by the TreeManager class  
+	All else-ifs that are removed are collected in a vector
+
+Expr-tree
+	TreeManager is used to interact with the expr_tree, holds clang objects 
+	Allows the current node to be pruned and rebuilt
+	ExprTree is a wrapper around each clang node in the expr
+	Side-effect checking carried out on each function call in the tree
+
+
+Side-effect-checker
+	Checks for long functions, greater than 15 stmts 
+	Checks for pointers or references to non-const variables as arguments 
+	Checks for incrementing or decrementing non-local variables
+	Checks for incrementing or decrementing non-local 
+	Checks for pointer or reference declarations to non-const non-local variable
+	Checks for assignments to global variables
+
+Breg-options 
+	Silent - no ouput displayed
+	Ignore-side-effects - functions are removed regardless of side-effects
+	Function-removal-warnings - displays result of side-effect checker 
+	Condition-extraction - extract condition if functions have side-effects
+	Overrides - CSV, UUID, Pricing-number, Machine-or-group
+	
+

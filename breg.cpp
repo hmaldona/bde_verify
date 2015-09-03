@@ -1,9 +1,17 @@
 #include <string>
 
 #include "/bbsrc/thirdparty/bbit/include/bbit/200911/bbit_send_to_omx.h"                
+#include "/bbsrc/thirdparty/bbit/include/bbit/201409/bbit_202535_ox_order_bunched_fields_rw.h"
 
-#define bregT__value() q()
-#define bregF__value() g()
+#define bregT__value() bregdb_eval_bbit_bool_rv(&bbit_send_to_omx, false)
+#define bregF__value() bregdb_eval_bbit_bool_rv(&bbit_202535_ox_order_bunched_fields_rw, false)
+
+//int bregT = 1;
+//int bregF = 0;
+//
+//bool bregdb_eval_bbit_bool_rv(int i) {
+//    return i;
+//}
 
 
 class str {
@@ -64,7 +72,7 @@ bool pointerFunction() {
 str s = str();
 bool methodFunction() {
     s.x++;
-    //s.inc();
+    s.inc();
     return true;
 }
 
@@ -101,29 +109,25 @@ bool refFunction() {
     return true;
 }
 
-//x = (anything) where x points to const or x is non pointer
-//int const * x = (anything) 
-
-//int * x = &global 
-//int * x = x.call() //int* x.call() if x is global 
-//int * x = s.x; //if s is global 
-//int * x = call() // int* call 
-//
-//int x = (anything)
-//
-//s.x = &global
-//x = &global
-//
-//stmt ( declStmt( ptrVarDecl ( hasInitialiser() ) ) )
-
 
 
 void f() 
-{ 
+{
+    //comment
+    if ( bregF__value() ) {
+        // comment 
+        if ( bregT__value() ) {
+            //comment
+        }
+    }
+
+
+    //hey
     if (bbit_send_to_omx__value() && q()) {
         int i = 0;
     }
-    
+
+        
     if ( bregT__value() ) {int i = 0;}
     
 
@@ -238,7 +242,7 @@ void f()
     bool i = bbit_send_to_omx__value();
     
     //var with breg value
-    if (i) {
+    if (true) {
         int one = 0;
     }
 
@@ -327,4 +331,57 @@ void f()
     }
 
 
+    if ( (bregF__value() && q()) && (bregF__value() && q()) ) {
+        //comment
+    }
+    else {
+        
+    }
+   
+    //start
+    if ( bregT__value() && bregF__value() ) {
+        //cooment
+    }
+    //end
+    //
+
+    if ( bregT__value() ) {
+        if ( true ) {
+            int i = 0;
+        }
+    }
+
 }
+
+
+class asdasd {
+    public:
+    void f()
+    {
+        {
+            //comment
+            int i = 0;
+        }
+    }
+    
+    bool g() {
+        return true;
+    }
+};
+
+
+void someFunc() {
+    int rectyp = 0;
+    std::string m_fietTradeType;
+    asdasd asd;
+
+
+    if ( ( ( !bregT__value() && rectyp == 1) && m_fietTradeType == "S" ) && !asd.g() )
+    {
+        rectyp = 10;
+    }
+
+}
+
+
+

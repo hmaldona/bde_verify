@@ -36,6 +36,9 @@ using namespace clang::ast_matchers;
 using namespace clang::tooling;
 
 
+
+
+
 namespace clang {
     namespace ast_matchers {
         AST_MATCHER(DeclRefExpr, nonLocalDeclRef) {
@@ -115,72 +118,30 @@ namespace clang {
             }
             return false;
         }
-    }
-}
+    };
+};
 
 
 namespace Matchers {
 
+    internal::Matcher<Expr> deepExpr( internal::Matcher<Expr> matcher ); 
+    internal::Matcher<UnaryOperator> isIncOrDec( internal::Matcher<UnaryOperator> matcher );
+    internal::Matcher<Decl> ptrRefVarDecl( internal::Matcher<VarDecl> matcher );
+    internal::Matcher<QualType> isPtrRef();
 
-    internal::Matcher<Expr> deepExpr( internal::Matcher<Expr> matcher ) { 
-        return expr( eachOf( 
-                hasDescendant( expr( matcher)), 
-                matcher
-                ));
-    }
-
-    internal::Matcher<UnaryOperator> isIncOrDec( internal::Matcher<UnaryOperator> matcher ) { 
-        return expr( eachOf( 
-            unaryOperator( hasOperatorName("++"), matcher),
-            unaryOperator( hasOperatorName("--"), matcher)
-            ));
-    }
-
-    internal::Matcher<Decl> ptrRefVarDecl( internal::Matcher<VarDecl> matcher ) { 
-        return varDecl( eachOf( hasType( pointerType( pointee( unless( isConstQualified())))), 
-                                hasType( referenceType( pointee( unless( isConstQualified()))))), 
-                        matcher);
-    }
-
-    internal::Matcher<QualType> isPtrRef() { 
-        return qualType( anyOf( pointerType( pointee( unless( isConstQualified()))), 
-                                referenceType( pointee( unless( isConstQualified()))))
-                   );
-    }
-
-
-    static const internal::DynTypedMatcher varDeclMatcher = declStmt( hasSingleDecl( ptrRefVarDecl( 
-                                                                        hasInitializer( eachOf( 
-                                                                            hasDescendant( declRefExpr( nonLocalDeclRef())), 
-                                                                            hasDescendant( callExpr( callee( functionDecl( returns( isNonConstPtr())))))
-                                                                            )))));
-
-    static const internal::DynTypedMatcher assignMatcher = expr( eachOf( 
-                                            binaryOperator( hasOperatorName("="), hasLHS( declRefExpr( nonLocalDeclRef()))),
-                                            binaryOperator( hasOperatorName("="), hasLHS( declRefExpr( ptrRefDeclRefExpr())), 
-                                                                                  hasRHS( expr( deepExpr( declRefExpr( nonLocalDeclRef()))))),
-                                            binaryOperator( hasOperatorName("="), hasLHS( memberExpr( localMember(), hasType( isPtrRef()))), 
-                                                                                  hasRHS( expr( deepExpr( declRefExpr( nonLocalDeclRef()))))),
-                                            binaryOperator( hasOperatorName("="), hasLHS( memberExpr( nonLocalMember()))),
-                                            binaryOperator( hasOperatorName("="), hasLHS( thisExpr().bind("node") ))
-                                            ));
-
+    extern internal::DynTypedMatcher varDeclMatcher;
+    extern internal::DynTypedMatcher assignMatcher;
     
 
 
-    static const internal::DynTypedMatcher incOrDecMatcher = expr( unaryOperator( isIncOrDec( hasUnaryOperand( eachOf( 
-                                                                             expr( deepExpr( declRefExpr( nonLocalDeclRef()))), 
-                                                                             expr( deepExpr( memberExpr( nonLocalMember()))),
-                                                                             expr( deepExpr( thisExpr().bind("node") )),
-                                                                             expr( deepExpr( callExpr( callee( functionDecl( returns( isNonConstPtr()))))))
-                                                                             )))));
-
-    static const internal::DynTypedMatcher callMatcher = expr( callExpr().bind("node") );
+    extern internal::DynTypedMatcher incOrDecMatcher;
+    extern internal::DynTypedMatcher callMatcher;
 
     
-    static const internal::DynTypedMatcher ptrFieldDeclMatcher = valueDecl( hasType( recordDecl( forEachDescendant( fieldDecl( hasType( isPtrRef()))))));
-
-
+    extern internal::DynTypedMatcher ptrFieldDeclMatcher;
+    
+    extern internal::DynTypedMatcher hasCompoundStmtAncestor;
+    
     template<typename T>
     std::pair<T const *, bool> getNodeInExpr(clang::ASTContext * context, Stmt const * e, const internal::DynTypedMatcher &NodeMatch )
     { 
@@ -192,7 +153,7 @@ namespace Matchers {
 
         MatchFinder finder;
 
-        Stmt const * node = nullptr;
+        T const * node = nullptr;
         bool found = false;
 
         OnMatch<> m([&node, &found](const BoundNodes &nodes) { 
@@ -210,9 +171,9 @@ namespace Matchers {
             return std::pair<T const *, bool>( nullptr, found );
         }
 
-        return std::pair<T const *, bool>( llvm::dyn_cast<T>( node ), found );
-     }
-   
+        return std::pair<T const *, bool>( node , found );
+    }
+
 
     template<typename T>
     std::pair<T const *, bool> getNodeInExpr(clang::ASTContext * context, Decl const * d, const internal::DynTypedMatcher &NodeMatch )
@@ -225,7 +186,7 @@ namespace Matchers {
 
         MatchFinder finder;
 
-        Decl const * node = nullptr;
+        T const * node = nullptr;
         bool found = false;
 
         OnMatch<> m([&node, &found](const BoundNodes &nodes) { 
@@ -243,10 +204,10 @@ namespace Matchers {
             return std::pair<T const *, bool>( nullptr, found );
         }
 
-        return std::pair<T const *, bool>( llvm::dyn_cast<T>( node ), found );
-     }
+        return std::pair<T const *, bool>( node, found );
+    }
 
 
-}
+};
 
 #endif

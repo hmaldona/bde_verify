@@ -5,8 +5,10 @@
 
 #include <string>
 #include <map>
+#include <vector>
 
 namespace csautil {
+
 
 struct BREGEntryInfo
 {
@@ -29,6 +31,7 @@ public:
     bool         d_expiredValue;
 
     bool         d_isCached;
+
 
 private:
 
@@ -61,26 +64,33 @@ struct BRegistry
 {
 public:
     // class members
-    static void setRequesterUuid(unsigned int uuid);
+    void setRequesterUuid(unsigned int uuid);
 
-    static void setNumDaysSinceExpiry(unsigned int numOfDays);
+    void setNumDaysSinceExpiry(unsigned int numOfDays);
 
-    static bool getEntryInformation(BREGEntryInfo & entryInfo,
+    bool getEntryInformation(BREGEntryInfo & entryInfo,
                                     int             entryId);
 
-    static bool getEntryInformation(BREGEntryInfo     & entryInfo,
+    bool getEntryInformation(BREGEntryInfo     & entryInfo,
                                     std::string const & entryAccessor);
 
-    static bool getEntryValueInformation(BREGEntryInfo     & entryInfo,
+    bool getEntryValueInformation(BREGEntryInfo     & entryInfo,
                                          std::string const & entryAccessor);
+
+    bool getEntryByValue(BREGEntryInfo & entryInfo, 
+                         std::string const & entryAccessor, 
+                         int version);
+    
+    BRegistry();
+    BRegistry(unsigned int s_uuid, unsigned int s_daysSinceExpiry);
+
 
 private:
     // class data members
-    static unsigned int s_uuid;
-    static unsigned int s_daysSinceExpiry;
-
-    static std::map<std::string, BREGEntryInfo> s_entries;
-
+    unsigned int s_uuid;
+    unsigned int s_daysSinceExpiry;
+    std::map<std::string, int> my_vect;
+    std::map<std::string, BREGEntryInfo> s_entries;
 };
 
 } // namespace csautil

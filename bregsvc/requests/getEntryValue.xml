@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<request>
+  <getEntryValue>
+    <entryId>12345</entryId>
+    <version>1</version>
+  </getEntryValue>
+</request>

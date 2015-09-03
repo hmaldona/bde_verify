@@ -53,8 +53,8 @@ then
     sed -i "1s|.*|set breg_file $arg2|" $remover
 fi
 
-./`dirname $0`/bde_verify --noovr --rewrite-dir=./ --config=$replacer $arg1
-./`dirname $0`/bde_verify --noovr --rewrite-dir=./ --config=$remover $arg1\-rewritten
+./`dirname $0`/bde_verify --noovr --rewrite-dir=./ --config=$replacer -I/bb/build/share/stp/include/00offlonly -I`/home/hmaldona/bin/bdeverify-helper.pl -d source -v BBHDR`00depbuild -I`/home/hmaldona/bin/bdeverify-helper.pl -d source -v BBHDR`00deployed -I`/home/hmaldona/bin/bdeverify-helper.pl -d source -v BBHDR`00offlonly $arg1
+./`dirname $0`/bde_verify --noovr --rewrite-dir=./ --config=$remover -I/bb/build/share/stp/include/00offlonly -I`/home/hmaldona/bin/bdeverify-helper.pl -d source -v BBHDR`00depbuild -I`/home/hmaldona/bin/bdeverify-helper.pl -d source -v BBHDR`00deployed -I`/home/hmaldona/bin/bdeverify-helper.pl -d source -v BBHDR`00offlonly $arg1\-rewritten
 
 
 if [ ! -f $arg1\-rewritten\-rewritten ]

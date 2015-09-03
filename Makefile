@@ -27,7 +27,7 @@ CSAUTILDIR  = groups/csa/csautil
 AET         = aet
 LAET        = aet
 LIBAET      = lib$(LAET).a
-AETDIR      = /bb/mbig/mbig3170/ts/et/git/aimet/aet/aetutils
+AETDIR      = /home/shargadon/aet/aetutils
 
 CXXFLAGS   += -m64 -std=c++11
 CXXFLAGS   += -Wall -Wno-unused-local-typedefs
@@ -72,7 +72,7 @@ OBJ        := $(SYSTEM)-$(notdir $(CXX))
 INCFLAGS   += -I$(LLVMDIR)/include
 INCFLAGS   += -I/bb/build/$(SYSTEM)-$(PROCESSOR)-64/release/robolibs/trunk/lib/dpkgroot/opt/bb/include/  
 LDFLAGS    += -L$(LLVMDIR)/lib -L$(CSABASEDIR)/$(OBJ) -L$(CSAUTILDIR)/$(OBJ)
-LDFLAGS    += -L$(AETDIR)/$(OBJ) -L./breguisvcmsg 
+LDFLAGS    += -L$(AETDIR)/$(OBJ) -L./bregsvc
 LDFLAGS    += -L/bb/build/$(SYSTEM)-$(PROCESSOR)-64/release/robolibs/trunk/lib/
 LDFLAGS    += -L/bb/build/$(SYSTEM)-$(PROCESSOR)-64/release/robolibs/trunk/lib/dpkgroot/opt/bb/lib64/robo/
 LDFLAGS    += -L/bb/build/$(SYSTEM)-$(PROCESSOR)-64/release/robolibs/trunk/lib/dpkgroot/opt/bb/lib64/
@@ -83,9 +83,10 @@ VERBOSE ?= @
 #  ----------------------------------------------------------------------------
 
 CXXFILES =                                                                    \
+		groups/csa/breg_matchers.cpp								          \
 		groups/csa/breg_remover.cpp										      \
 		groups/csa/breg_replacer.cpp                                          \
-		groups/csa/expr_tree.cpp                                               \
+		groups/csa/expr_tree.cpp                                              \
 
 # -----------------------------------------------------------------------------
 
@@ -131,7 +132,7 @@ EXTRALIBS +=  -lbte              											  \
 LIBS     =    -l$(LCB)                                                        \
 			  -l$(LCU)                                                        \
 			  -l$(LAET)                                                       \
-			  -lbreguisvcmsg.$(ARCHCODE)                                      \
+			  -lbreguisvcmsg.$(ARCHCODE).64                                   \
               -lLLVMX86Info                                                   \
               -lLLVMSparcInfo                                                 \
               -lclangFrontendTool                                             \

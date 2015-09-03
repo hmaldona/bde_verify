@@ -70,7 +70,7 @@ inline
 BregSvcClient::BregSvcClient()
     : BloombergLP::aetutils::ServiceTcpClient<BregSvcClient>("breguisvc",
                                                              "urn:x-bloomberg-com:BAS.services.breguisvc",
-                                                             64730, 1, 0)
+                                                             64730, 1, 12)
 {
     // do nothing
 }

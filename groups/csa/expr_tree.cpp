@@ -1,5 +1,5 @@
 #include "expr_tree.h"
-#include "breg_matchers.h"
+//#include "breg_matchers.h"
 
 #include <clang/ASTMatchers/ASTMatchers.h>
 #include <clang/ASTMatchers/ASTMatchFinder.h>
@@ -133,7 +133,7 @@ void ExprTree::pruneTree()
         this->evaluated = true;
 
         bool hasPossibleSideEffects = this->clangNode->HasSideEffects( *this->manager->context );
-
+        std::cout << this->exprString << std::endl;
         if ( hasPossibleSideEffects == false && this->sideEffects == false ) {
 
             this->removable = true;
@@ -152,9 +152,6 @@ void ExprTree::pruneTree()
         std::unique_ptr<ExprTree> nodeLHS( new ExprTree(nullptr, nullptr, false, lhs, this->manager) );
         std::unique_ptr<ExprTree> nodeRHS( new ExprTree(nullptr, nullptr, false, rhs, this->manager) );
 
-        nodeLHS->sideEffects = this->sideEffects;
-        nodeRHS->sideEffects = this->sideEffects;
-
         nodeLHS->pruneTree();
         nodeRHS->pruneTree();
 
@@ -165,7 +162,11 @@ void ExprTree::pruneTree()
         
         this->sideEffects = this->lhs->sideEffects || this->rhs->sideEffects;
         this->removable = !this->sideEffects && this->evaluated;
+           
+        std::cout << this->exprString << std::endl;
+        std::cout << this->removable << std::endl;
 
+        // short circuit evalutation check
         if ( this->removable == false ) {
             this->removable = this->evaluated && ( this->lhs->evaluated && !this->lhs->sideEffects );
         }
@@ -174,8 +175,6 @@ void ExprTree::pruneTree()
         Expr const * sub = unExpr->getSubExpr();
 
         std::unique_ptr<ExprTree> nodeSub( new ExprTree(nullptr, nullptr, false, sub, this->manager) );
-
-        nodeSub->sideEffects = this->sideEffects;
 
         nodeSub->pruneTree();
         
@@ -214,7 +213,7 @@ void ExprTree::pruneTree()
                 this->sideEffects = false;
             }
 
-            if ( this->manager->options.silentSideEffectsWarnings == false ) {
+            if ( this->manager->options.functionRemovalWarnings == false ) {
                 this->manager->toolMessages->push_back(message);
             }
         }
@@ -269,7 +268,7 @@ void ExprTree::replaceWithBranch( std::unique_ptr<ExprTree>& branch )
     std::string message = this->clangNode->getLocStart().printToString(*this->manager->manager) + ": "
                           "replacing condition: " + "'" + 
                           this->exprString + "'" + "\n\n"
-                          " with: " + "'" + this->exprString +
+                          " with: " + "'" + branch->exprString +
                           "'" + "\n\n";
 
     this->manager->toolMessages->push_back( message );

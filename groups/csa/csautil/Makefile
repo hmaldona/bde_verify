@@ -23,7 +23,7 @@ LIBCSAUTIL = lib$(LCU).a
 AET        = aet
 LAET       = aet
 LIBAET     = lib$(LAET).a
-AETDIR     = /bb/mbig/mbig3170/ts/et/git/aimet/aet/aetutils
+AETDIR     = /home/shargadon/aet/aetutils
 
 CXXFLAGS   += -m64 -std=c++11
 CXXFLAGS   += -Wall -Wno-unused-local-typedefs
@@ -54,7 +54,7 @@ CXXFILES =                                                 \
 # -----------------------------------------------------------------------------
 
 DEFFLAGS += -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS
-INCFLAGS += -I. -I$(AETDIR) -I../../../breguisvcmsg/src 
+INCFLAGS += -I. -I$(AETDIR) -I../../../bregsvc/src 
 INCFLAGS += -I/bb/build/$(SYSTEM)-$(PROCESSOR)-64/release/robolibs/trunk/lib/dpkgroot/opt/bb/include/
 CXXFLAGS += -fno-common -fno-strict-aliasing
 
