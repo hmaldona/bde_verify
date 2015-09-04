@@ -73,11 +73,20 @@ namespace {
         : Report<data>(analyser, type)
     {
         offset = 0;
-           
+
         this->options = BregOptions();
-        std::string csvFile = a.config()->value("breg_file");
         
-        bregs = readCSV(csvFile);
+        std::string bregValue = a.config()->value("breg_value");
+        if ( bregValue == "csv" ) {
+            std::string csvFile = a.config()->value("breg_file");
+            this->options.bregValue = BregValue::csv;
+            bregs = readCSV(csvFile);
+        }
+        else if ( bregValue == "UUID" ) {
+            this->options.bregValue = BregValue::UUID;
+        }   
+        
+        
     }
     
 
@@ -130,15 +139,12 @@ namespace {
 
             std::string breg = pair.first;
            
-            std::cout << breg << std::endl;
-
             bool bregFound = registry.getEntryInformation( bregInfo, breg );
-            std::cout << registry.getEntryByValue( bregInfo, breg, 8 ) << std::endl;
-            std::cout << bregInfo.d_prodValue << std::endl;
 
             if ( bregFound ) {
-                registry.getEntryValueInformation( bregInfo, breg );
+                registry.getEntryValueInformation( bregInfo, breg, "csv", "" );
             }
+
             return bregInfo.d_prodValue;
         }
         
@@ -209,6 +215,7 @@ namespace {
         IfStmt const * ifStmt = nodes.getNodeAs<IfStmt>("ifstmt");
         BinaryOperator const * assign = nodes.getNodeAs<BinaryOperator>("=");
         VarDecl const * varDecl = nodes.getNodeAs<VarDecl>("varDecl");
+    
 
         if ( varDecl != nullptr ) {
             Expr const * init = varDecl->getInit();
@@ -267,14 +274,13 @@ namespace {
                                 call->getArgs()[0], 
                                 expr( hasDescendant( declRefExpr().bind("node"))));
                         if ( bregVar.second == true ) {
+                            std::string bregName = bregVar.first->getFoundDecl()->getNameAsString();
 
                             std::string callName = call->getDirectCallee()->getNameAsString();
                             if ( callName == "bregdb_eval_bbitcxt_bool_rv" ) {
-
+                                
                                 bool foundBreg = false;
-                                std::string bregName = bregVar.first->getFoundDecl()->getNameAsString();
                                 std::string replacement;
-
                                 if ( this->options.bregValue != csv ) {
                                     replacement = getBregValue( std::make_pair( bregName, defaultValue ) ) ? "true" : "false";
                                     foundBreg = true;

@@ -75,7 +75,9 @@ public:
                                     std::string const & entryAccessor);
 
     bool getEntryValueInformation(BREGEntryInfo     & entryInfo,
-                                         std::string const & entryAccessor);
+                                  std::string const & entryAccessor, 
+                                  std::string overrideType,
+                                  std::string overrideValue);
 
     bool getEntryByValue(BREGEntryInfo & entryInfo, 
                          std::string const & entryAccessor, 

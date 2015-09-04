@@ -162,9 +162,6 @@ void ExprTree::pruneTree()
         
         this->sideEffects = this->lhs->sideEffects || this->rhs->sideEffects;
         this->removable = !this->sideEffects && this->evaluated;
-           
-        std::cout << this->exprString << std::endl;
-        std::cout << this->removable << std::endl;
 
         // short circuit evalutation check
         if ( this->removable == false ) {

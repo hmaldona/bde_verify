@@ -1,10 +1,18 @@
 #include <string>
 
+#include <bregdb_eval.h>
 #include "/bbsrc/thirdparty/bbit/include/bbit/200911/bbit_send_to_omx.h"                
 #include "/bbsrc/thirdparty/bbit/include/bbit/201409/bbit_202535_ox_order_bunched_fields_rw.h"
+#include "/bbsrc/thirdparty/bbit/include/bbit/201401/bbit_support_usi.h"
+
+#define BREG_ON(x) if ( bregdb_eval_bbit_bool_rv(x, false) ) {
+#define BREG_END(x) }
+
 
 #define bregT__value() bregdb_eval_bbit_bool_rv(&bbit_send_to_omx, false)
 #define bregF__value() bregdb_eval_bbit_bool_rv(&bbit_202535_ox_order_bunched_fields_rw, false)
+#define bregT &bbit_send_to_omx
+#define bregF &bbit_202535_ox_order_bunched_fields_rw  
 
 //int bregT = 1;
 //int bregF = 0;
@@ -120,6 +128,29 @@ void f()
             //comment
         }
     }
+
+    int j = 0;
+    if ( bbit_support_usi__value() == false )
+        j = 0;
+    
+
+    BREG_ON(bregT) {
+        int x = 0;
+    } 
+    BREG_END(bregT)
+
+
+    int * omTicketNumber = 0;
+
+    if (NULL != omTicketNumber)
+      *omTicketNumber = 5;
+
+    
+    if(bbit_support_usi__value() && (NULL != omTicketNumber) )
+    {
+        int oxf_num = 5;
+    }
+
 
 
     //hey

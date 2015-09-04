@@ -89,17 +89,30 @@ static const internal::DynTypedMatcher dyn_matchIf()
 report::report(Analyser& analyser, PPObserver::CallbackType type)
     : Report<data>(analyser, type)
 {
-    std::string csvFile = a.config()->value("breg_file");
-    
     this->options = BregOptions();
-    this->options.ignoreSideEffects = a.config()->value("side_effects") == "true";
 
-    auto csvData = readCSV(csvFile);
+    std::string csvFile = a.config()->value("breg_file");
+    if ( csvFile == "csv" ) {
+        
+        this->options.bregValue = BregValue::csv;
+        auto csvData = readCSV(csvFile);
 
-    for ( auto e : csvData ) {
-        std::cout << e.first << std::endl;
-        this->bregNames.push_back(e.first);
+        for ( auto e : csvData ) {
+            std::cout << e.first << std::endl;
+            this->bregNames.push_back(e.first);
+        }
+
     }
+    else if ( csvFile == "UUID" ) {
+        this->options.bregValue = BregValue::UUID;
+    }
+
+    this->options.ignoreSideEffects = a.config()->value("side_effects") == "true";
+    this->options.silent = a.config()->value("silent") == "true";
+    this->options.functionRemovalWarnings = a.config()->value("silent") == "true";
+    this->options.conditionExtraction = a.config()->value("conditionExtraction") == "true";
+
+    
 }
 
 // remove includes
@@ -306,33 +319,35 @@ std::pair<std::string, SourceRange> report::rebuildIfStmt(bool expressionValue, 
 
     if (expressionValue == true) { //replace entire if stmt with body of if
 
-        CompoundStmt const * body = static_cast<CompoundStmt const*>( ifStmt->getThen() );
-        bool hasVars = hasVarDecls( body ); // does the if body has var decls 
+        CompoundStmt const * body = llvm::dyn_cast<CompoundStmt>( ifStmt->getThen() );
+        if ( body != nullptr ) {
+            bool hasVars = hasVarDecls( body ); // does the if body has var decls 
 
-        if (body->body_back() != nullptr) {
-            ReturnStmt const * ret = llvm::dyn_cast<ReturnStmt>( body->body_back() );
+            if (body->body_back() != nullptr) {
+                ReturnStmt const * ret = llvm::dyn_cast<ReturnStmt>( body->body_back() );
 
-            if ( ret != nullptr ) {
-                
-                if ( funcBody != nullptr ) {
-                    rangeToBeReplaced = SourceRange(ifStmt->getLocStart(), funcBody->getLocEnd());
+                if ( ret != nullptr ) {
+
+                    if ( funcBody != nullptr ) {
+                        rangeToBeReplaced = SourceRange(ifStmt->getLocStart(), funcBody->getLocEnd());
+                        unsigned columnNumber = a.manager().getPresumedColumnNumber(ifStmt->getLocStart());
+                        replacement = getStmtBodyReplacement(body, columnNumber);
+                    }
+                }
+                else if ( hasVars ) { // braces must remain 
+                    SourceRange replacementRange = SourceRange(body->getLBracLoc(), body->getRBracLoc().getLocWithOffset(1));
+                    replacement += a.get_source(replacementRange, true).str();
+                }
+                else { // braces can be removed 
                     unsigned columnNumber = a.manager().getPresumedColumnNumber(ifStmt->getLocStart());
-                    replacement = getStmtBodyReplacement(body, columnNumber);
+                    replacement += getStmtBodyReplacement(body, columnNumber);
                 }
             }
-            else if ( hasVars ) { // braces must remain 
-                SourceRange replacementRange = SourceRange(body->getLBracLoc(), body->getRBracLoc().getLocWithOffset(1));
-                replacement += a.get_source(replacementRange, true).str();
-            }
-            else { // braces can be removed 
-                unsigned columnNumber = a.manager().getPresumedColumnNumber(ifStmt->getLocStart());
-                replacement += getStmtBodyReplacement(body, columnNumber);
-            }
-        }
 
-        if ( elseStmt != nullptr ) { 
-            addChainedElses( elseStmt ); //store else statements removed 
-        }   
+            if ( elseStmt != nullptr ) { 
+                addChainedElses( elseStmt ); //store else statements removed 
+            } 
+        }
     }
     else { //removes the if stmt, leaves the else parts if there are any
         stmtsRemoved.push_back( ifStmt->getThen() );

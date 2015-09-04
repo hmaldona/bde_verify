@@ -214,7 +214,9 @@ bool BRegistry::getEntryInformation(BREGEntryInfo     & entryInfo,
 
 
 bool BRegistry::getEntryValueInformation(BREGEntryInfo     & entryInfo,
-                                         std::string const & entryAccessor)
+                                         std::string const & entryAccessor,
+                                         std::string overrideType,
+                                         std::string overrideValue)
 {
     BAEL_LOG_SET_CATEGORY(LOG_CATEGORY);
 
@@ -275,8 +277,32 @@ bool BRegistry::getEntryValueInformation(BREGEntryInfo     & entryInfo,
             BAEL_LOG_ERROR << "Invalid expiry date: " << entry.d_expiryDate
                            << BAEL_LOG_END;
         }
+        
+        if ( nodeDetails.valueTypeEnum() != s_breguisvc::ValueType::BOOLEAN ) {
+            return false;
+        }
+        
+       
 
-        entry.d_prodValue = nodeDetails.inProd();
+        if ( overrideType == "csv" ) {
+            entry.d_prodValue = nodeDetails.prodValue() == "TRUE";
+        }
+        else {
+            bool setValue = false;
+            for ( auto o : nodeDetails.prodOverrides() ) {
+                if ( o.typeString() == overrideType && o.setting() == overrideValue ) {
+                    entry.d_prodValue = o.value() == "TRUE";
+                    setValue = true;       
+                }
+            }
+
+            if ( setValue == false  ) {
+                entry.d_prodValue = nodeDetails.prodValue() == "TRUE";
+            }
+        }
+        
+
+        std::cout << nodeDetails.prodOverrides()[0].typeString() << std::endl;
 
         if (entry.d_hasExpired
             && entry.d_hasExpired == nodeDetails.hasExpired()

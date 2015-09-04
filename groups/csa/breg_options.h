@@ -33,7 +33,7 @@ struct BregOptions {
                     dateString(),
                     UUID(0),
                     pricingNumber(0),
-                    machineGroup(0)
+                    machineGroup()
     {}
 
 };
