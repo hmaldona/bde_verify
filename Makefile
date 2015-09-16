@@ -141,6 +141,7 @@ CXXFILES =                                                                    \
         groups/csa/csatr/csatr_packagename.cpp                                \
         groups/csa/csatr/csatr_usingdeclarationinheader.cpp                   \
         groups/csa/csatr/csatr_usingdirectiveinheader.cpp                     \
+		groups/csa/complexity_check.cpp								  \
 
 UNUSED =                                                                      \
         groups/csa/csadep/csadep_dependencies.cpp                             \
