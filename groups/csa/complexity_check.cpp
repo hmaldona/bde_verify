@@ -28,22 +28,23 @@ struct data {
 };
 
 
-struct report : Report<data>
-{
+struct report : Report<data> {
+
     INHERIT_REPORT_CTOR(report, Report, data);
 
     void calculateComplex(BoundNodes const & nodes);
-    void generateReport();
     void operator()();
+    void generateReport();
 
+    // Maps each function to its complexity value
     std::map<FunctionDecl const *, int> complexDict;
     // Total file complexity
     int complexity = 0;
 };
 
 
-// Matches 
-static const internal::DynTypedMatcher& dyn_matchComplexity()
+// Matches every if,switch,while,for,try,catch inside a method declaration
+static const internal::DynTypedMatcher& dyn_matchComplexity() 
 {
     static const internal::DynTypedMatcher& matcher =
     findAll(functionDecl(hasDescendant(stmt(eachOf(
@@ -68,22 +69,21 @@ void report::operator()()
     generateReport();
 }
 
+// Generates report if any of the methods exceeded the verified threshold
 void report::generateReport(){
     // Get the complexity threshold
     data& d = a.attachment<data>();
-
     std::string tag = "CX01";
     std::string message = "Complexity Exceeded the maximum threshold ! Threshold verified: " 
     + std::to_string(d.d_max_complexity) + " Found: ";
-    SourceLocation loc; //location of method
+    //location of method
+    SourceLocation loc; 
     
-
     for(auto curMethod : complexDict){
         if (curMethod.second > d.d_max_complexity){
             loc = curMethod.first->getLocStart();
             std::string val = std::to_string(curMethod.second);
             a.report(loc, check_name, tag, message + val);
-            //a.InsertTextBefore(loc, message + val + "\n");
         }
         // Add to total File complexity
         complexity += curMethod.second;
@@ -95,7 +95,6 @@ void report::generateReport(){
 void report::calculateComplex(BoundNodes const & nodes)
 {
     FunctionDecl const* curMethod = nodes.getNodeAs<FunctionDecl>("methodDecl");
-    // FunctionDecl const* curfunc = nodes.getNodeAs<FunctionDecl>("funcDecl");
     IfStmt const * curIf = nodes.getNodeAs<IfStmt>("if");
     SwitchCase const * curSwitch = nodes.getNodeAs<SwitchCase>("switch");
     WhileStmt const * curWhile = nodes.getNodeAs<WhileStmt>("while");
@@ -107,9 +106,9 @@ void report::calculateComplex(BoundNodes const & nodes)
     const auto& fId = sm.getMainFileID();
     const auto& fileId = sm.getFileID(curMethod->getLocation());
 
-
+    // If matched method is not in the same .cpp file i.e:includes
     if (fId == fileId){
-        // std::cout<<curMethod->getNameAsString()<<"\n";
+
         if (curWhile != nullptr || curSwitch != nullptr || curFor != nullptr || curIf != nullptr
             || curTry != nullptr || curCatch != nullptr){
             if (complexDict.find(curMethod) != complexDict.end()){
@@ -128,7 +127,6 @@ void subscribe(Analyser& analyser, Visitor& visitor, PPObserver& observer) {
     if (!(is >> d.d_max_complexity)) {
         d.d_max_complexity = 10;
     }
-       
     analyser.onTranslationUnitDone += report(analyser); 
 }
 
