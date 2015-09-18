@@ -53,7 +53,9 @@ static const internal::DynTypedMatcher& dyn_matchComplexity()
         findAll(stmt(whileStmt().bind("while"))),
         findAll(stmt(forStmt().bind("for"))),
         findAll(stmt(tryStmt().bind("try"))),
-        findAll(stmt(catchStmt().bind("catch")))
+        findAll(stmt(catchStmt().bind("catch"))),
+        findAll(stmt(ifStmt(hasCondition(findAll(binaryOperator(hasOperatorName("&&")).bind("condOp")))))),
+        findAll(stmt(ifStmt(hasCondition(findAll(binaryOperator(hasOperatorName("||")).bind("condOp"))))))
         )))).bind("methodDecl"));
 
     return matcher; 
@@ -101,6 +103,7 @@ void report::calculateComplex(BoundNodes const & nodes)
     ForStmt const * curFor = nodes.getNodeAs<ForStmt>("for");
     CXXTryStmt const * curTry = nodes.getNodeAs<CXXTryStmt>("try");
     CXXCatchStmt const * curCatch = nodes.getNodeAs<CXXCatchStmt>("catch");
+    BinaryOperator const * curBin = nodes.getNodeAs<BinaryOperator>("condOp");
 
     SourceManager &sm = a.manager();
     const auto& fId = sm.getMainFileID();
@@ -108,9 +111,8 @@ void report::calculateComplex(BoundNodes const & nodes)
 
     // If matched method is not in the same .cpp file i.e:includes
     if (fId == fileId){
-
         if (curWhile != nullptr || curSwitch != nullptr || curFor != nullptr || curIf != nullptr
-            || curTry != nullptr || curCatch != nullptr){
+            || curTry != nullptr || curCatch != nullptr || curBin != nullptr){
             if (complexDict.find(curMethod) != complexDict.end()){
                 complexDict[curMethod] = complexDict[curMethod] + 1;    
             }else{

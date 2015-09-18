@@ -455,6 +455,14 @@ class ThirdClass{
                 printf("default case \n");
             break;
         }
+        bool ff = true;
+        bool k = false;
+
+        bool s = ff && k;
+
+        if ((s && ff && k && test3()) || (ff && k) ){
+            printf("asdasd\n");
+        }
 
         return 0;
     }
@@ -472,11 +480,15 @@ class ThirdClass{
             if (i<3){
                 printf("asdasd\n");
             }
-            if (i+2<4)
+            if ( (i + 2 < 4 && i < 23 ) || i>23)
             {
                 /* code */
             }
         }
 
+    }
+
+    bool test3(){
+        return true;
     }
 };
