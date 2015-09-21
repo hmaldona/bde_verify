@@ -257,28 +257,22 @@ void foo()
                 if (a < 2){
                     for (int i = 0; i < 12; ++i)
                     {
-                        /* code */
-                        for (int iii = 0; i < 12; ++i)
+                    
+                        for (int ii = 0; i < 12; ++i)
                         {
-                            /* code */
-                            for (int ii = 0; i < 12; ++i)
-                            {
-                            /* code */
-                                switch(i){
-                                    case 1:
+                        /* code */
+                            switch(i){
+                                case 1:
 
-                                    break;
-                                    case 2:
+                                break;
+                                case 2:
 
-                                    break;
+                                break;
 
-                                    default:
-                                    break;
-                                }
+                                default:
+                                break;
                             }
-
                         }
-
                     }
 
                 }
@@ -290,20 +284,20 @@ void foo()
 
             break;
 
-            // default:
-            //     printf("default case \n");
-            // break;
         }
+        int cond = a > 2 ? 2 : 3;
+
         
     }
 
     
 class SecondClass{
 
-    //14
+    //15
     void get(){
         int a  = 3;
         int b =  4;
+        int cond = a > 2 ? 2 : 3;
         if ( a == b ){
             printf("I love clang\n");
             if (a < b){
