@@ -4,7 +4,7 @@ public:
 	~test();
 	void get();
 	void test1(int a, int f);
-	inline int test::max1(int x, int y);
+	inline int max1(int x, int y);
     void foo()
     {   
         int a =4 ;
