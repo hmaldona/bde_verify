@@ -2,6 +2,11 @@ cmake_minimum_required(VERSION 3.1)
 
 project(bde_verify)
 
+find_package(LLVM REQUIRED)
+set(CLANG_RESOURCE_DIR "${LLVM_LIBRARY_OUTPUT_INTDIR}/clang/${CLANG_VERSION}"
+    CACHE PATH "Clang resource directory")
+file(GLOB CLANG_RESOURCE_FILES "${CLANG_RESOURCE_DIR}/include/*.*")
+
 if(MSVC)
     add_definitions(
         "/wd4146"
@@ -46,10 +51,6 @@ else()
         elseif(IS_DIRECTORY /usr)
             set($ENV{PREFIX} /usr)
         endif()
-    endif()
-
-    if(NOT $ENV{LLVMDIR})
-        set($ENV{LLVMDIR} $ENV{PREFIX})
     endif()
 
     if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
@@ -106,7 +107,7 @@ set(G ${CMAKE_CURRENT_SOURCE_DIR}/groups/csa)
 
 include_directories(
     ${G}/csabase
-    $ENV{LLVM}/include
+    ${LLVM_INCLUDE_DIRS}
     /opt/bb/include
     /opt/swt/include
 )
@@ -149,17 +150,19 @@ add_executable(bde_verify_bin
     ${G}/csaaq/csaaq_inentns.cpp
     ${G}/csaaq/csaaq_runtimeinit.cpp
     ${G}/csaaq/csaaq_transitiveincludes.cpp
+    ${G}/csabde/csabde_tool.cpp
     ${G}/csabbg/csabbg_allocatorforward.cpp
     ${G}/csabbg/csabbg_allocatornewwithpointer.cpp
     ${G}/csabbg/csabbg_assertassign.cpp
     ${G}/csabbg/csabbg_bslovrdstl.cpp
+    ${G}/csabbg/csabbg_classsections.cpp
     ${G}/csabbg/csabbg_cmporder.cpp
     ${G}/csabbg/csabbg_deprecated.cpp
     ${G}/csabbg/csabbg_enumvalue.cpp
     ${G}/csabbg/csabbg_functioncontract.cpp
     ${G}/csabbg/csabbg_midreturn.cpp
+    ${G}/csabbg/csabbg_membernames.cpp
     ${G}/csabbg/csabbg_testdriver.cpp
-    ${G}/csabde/csabde_tool.cpp
     ${G}/csafmt/csafmt_banner.cpp
     ${G}/csafmt/csafmt_comments.cpp
     ${G}/csafmt/csafmt_headline.cpp
@@ -182,6 +185,7 @@ add_executable(bde_verify_bin
     ${G}/csamisc/csamisc_hashptr.cpp
     ${G}/csamisc/csamisc_longinline.cpp
     ${G}/csamisc/csamisc_memberdefinitioninclassdefinition.cpp
+    ${G}/csamisc/csamisc_movablerefref.cpp
     ${G}/csamisc/csamisc_namespacetags.cpp
     ${G}/csamisc/csamisc_opvoidstar.cpp
     ${G}/csamisc/csamisc_spellcheck.cpp
@@ -213,6 +217,8 @@ add_executable(bde_verify_bin
     ${G}/csatr/csatr_packagename.cpp
     ${G}/csatr/csatr_usingdeclarationinheader.cpp
     ${G}/csatr/csatr_usingdirectiveinheader.cpp
+    ${G}/csaxform/csaxform_refactor.cpp
+    ${G}/csaxform/csaxform_refactor_config.cpp
 )
 
 target_compile_features(bde_verify_bin PUBLIC cxx_auto_type)
@@ -220,7 +226,7 @@ target_compile_features(bde_verify_bin PUBLIC cxx_auto_type)
 set(CMAKE_SKIP_RPATH ON)
 
 set(CMAKE_LIBRARY_PATH
-    $ENV{LLVM}/lib
+    ${LLVM_LIBRARY_DIRS}
     /opt/swt/lib64
     /opt/bb/lib64
     /usr/lib/sparcv9
@@ -230,7 +236,7 @@ set(CMAKE_LIBRARY_PATH
 function(llvmlib name)
     find_library(LIB${name}
                  NAMES ${name}
-                 PATHS $ENV{LLVM}/lib
+                 PATHS ${LLVM_LIBRARY_DIRS}
                        /opt/swt/lib64
                        /opt/bb/lib64
                        /usr/lib/sparcv9
@@ -277,6 +283,7 @@ llvmlib(LLVMBitReader)
 llvmlib(LLVMTarget)
 llvmlib(LLVMAsmParser)
 llvmlib(LLVMBitWriter)
+llvmlib(LLVMAsmPrinter)
 llvmlib(LLVMX86AsmPrinter)
 llvmlib(LLVMSparcAsmPrinter)
 llvmlib(LLVMX86Utils)
@@ -343,6 +350,8 @@ install(FILES
 file(GLOB headers "${G}/csabase/csabase_*.h")
 
 install(FILES ${headers} DESTINATION include/bde-verify)
+install(FILES ${CLANG_RESOURCE_FILES}
+        DESTINATION include/bde-verify/clang/include)
 
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "BDE Verify - Static C++ code analysis")
 set(PACK_PACKAGE_VENDOR "Bloomberg Finance L.P.")
@@ -351,7 +360,7 @@ set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "BDE Verify")
 set(CPACK_PACKAGE_VERSION_MAJOR "1")
 set(CPACK_PACKAGE_VERSION_MINOR "1")
-set(CPACK_PACKAGE_VERSION_PATCH "0")
+set(CPACK_PACKAGE_VERSION_PATCH "10")
 
 include(CPack)
 

@@ -189,10 +189,12 @@ namespace BloombergLP.BDE_VERIFY_VS {
                 var guidWpfViewHost = DefGuidList.guidIWpfTextViewHost;
                 object host;
                 userData.GetData(ref guidWpfViewHost, out host);
+                message = "File must be part of a project";
                 var document = (host as IWpfTextViewHost).TextView.TextBuffer.Properties.GetProperty(typeof(ITextDocument)) as ITextDocument;
                 var project = dte.Solution.FindProjectItem(document.FilePath).ContainingProject;
                 var vcproject = project.Object as VCProject;
                 var configuration = vcproject.Configurations.Item(dte.Solution.SolutionBuild.ActiveConfiguration.Name);
+                message = null;
                 var vctool = configuration.Tools.Item("VCCLCompilerTool") as VCCLCompilerTool;
                 var process = new System.Diagnostics.Process();
                 var si = process.StartInfo;
@@ -207,41 +209,47 @@ namespace BloombergLP.BDE_VERIFY_VS {
                 si.RedirectStandardOutput = false;
                 si.RedirectStandardError = true;
                 si.WorkingDirectory = Directory.GetParent(document.FilePath).ToString();
-                si.Arguments += " -plugin bde_verify";
+                si.Arguments += xclang("-plugin") + xclang("bde_verify");
                 if (cfg != null) {
-                    si.Arguments += " -plugin-arg-bde_verify config=" + Quote(cfg);
+                    si.Arguments += plugin("config=" + Quote(cfg));
                     if (GetConfig() == "") {
                         (GetDialogPage(typeof(OptionPageGrid)) as OptionPageGrid).Config = cfg;
                     }
                 }
                 if (GetOff()) {
-                    si.Arguments += " -plugin-arg-bde_verify config-line=" + Quote("all off");
+                    si.Arguments += plugin("config-line=" + Quote("all off"));
                 }
                 foreach (string s in GetExtra()) {
-                    si.Arguments += " -plugin-arg-bde_verify config-line=" + Quote(s);
+                    si.Arguments += plugin("config-line=" + Quote(s));
                 }
-                si.Arguments += " -plugin-arg-bde_verify diagnose=" + GetDiagnose();
+                si.Arguments += plugin("diagnose=" + GetDiagnose());
                 si.Arguments += " -fcxx-exceptions";
                 si.Arguments += " -fexceptions";
                 si.Arguments += " -fdiagnostics-show-note-include-stack";
                 si.Arguments += " -fdiagnostics-show-option";
+                si.Arguments += " -fsyntax-only";
+                si.Arguments += " -ferror-limit=0";
                 si.Arguments += " -fms-compatibility";
                 si.Arguments += " -fms-extensions";
                 si.Arguments += " -std=c++11";
                 var paths = new HashSet<string>();
                 paths.Add("");
+                message = "Cannot find preprocessor include path";
                 foreach (string dir in (".;" + vctool.FullIncludePath).Split(';')) {
                     if (paths.Add(dir)) {
                         si.Arguments += " -isystem " + Quote(dir);
                     }
                 }
+                message = null;
                 var defs = new HashSet<string>();
                 defs.Add("");
+                message = "Cannot find preprocessor definitions";
                 foreach (string def in ("BDE_VERIFY;" + vctool.PreprocessorDefinitions).Split(';')) {
                     if (defs.Add(def)) {
                         si.Arguments += " -D" + Quote(def);
                     }
                 }
+                message = null;
                 si.Arguments += " " + Quote(document.FilePath);
                 try {
                     process.Start();
@@ -314,8 +322,10 @@ namespace BloombergLP.BDE_VERIFY_VS {
                 } catch (Exception x) {
                     message = "Error: " + process.StartInfo.FileName + "\n" + x.Message;
                 }
-            } catch (NullReferenceException) {
-                message = "Information Unavailable";
+            } catch (NullReferenceException x) {
+                if (message == null) {
+                    message = x.Message;
+                }
             }
             if (message != null) {
                 IVsUIShell uiShell = GetService(typeof(SVsUIShell)) as IVsUIShell;
@@ -348,6 +358,24 @@ namespace BloombergLP.BDE_VERIFY_VS {
                 s = "\"" + s.Replace("\"", "\"\"") + "\"";
             }
             return s;
+        }
+
+        /// <summary>
+        /// Return <paramref name="s"/> prepended with " -Xclang ".
+        /// </summary>
+        /// <param name="s">The string to be prepended with " -Xclang ".</param>
+        /// <returns>The input string prepended with " -Xclang ".</returns>
+        private static string xclang(string s) {
+            return " -Xclang " + s;
+        }
+
+        /// <summary>
+        /// Return <paramref name="s"/> prepended with " -Xclang -plugin-arg-bde_verify -Xclang ".
+        /// </summary>
+        /// <param name="s">The string to be prepended with " -Xclang -plugin-arg-bde_verify -Xclang ".</param>
+        /// <returns>The input string prepended with " -Xclang -plugin-arg-bde_verify -Xclang ".</returns>
+        private static string plugin(string s) {
+            return xclang("-plugin-arg-bde_verify") + xclang(s);
         }
 
         /// <summary>
